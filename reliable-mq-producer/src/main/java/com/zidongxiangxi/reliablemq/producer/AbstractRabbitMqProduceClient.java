@@ -4,8 +4,8 @@ import com.alibaba.fastjson.JSON;
 import com.zidongxiangxi.reliabelmq.api.constant.ProducerConstants;
 import com.zidongxiangxi.reliabelmq.api.entity.RabbitProducer;
 import com.zidongxiangxi.reliabelmq.api.entity.enums.MessageTypeEnum;
-import com.zidongxiangxi.reliabelmq.api.producer.RabbitMqSendService;
-import com.zidongxiangxi.reliabelmq.api.producer.RabbitService;
+import com.zidongxiangxi.reliabelmq.api.producer.RabbitMqProduceClient;
+import com.zidongxiangxi.reliabelmq.api.producer.RabbitProducerService;
 import com.zidongxiangxi.reliablemq.producer.transaction.RabbitProducerTransactionMessageHolder;
 import com.zidongxiangxi.reliablemq.producer.transaction.RabbitTransactionContext;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -19,15 +19,15 @@ import java.util.Objects;
  * @author chenxudong
  * @date 2019/09/17
  */
-public abstract class AbstractRabbitMqSendService implements RabbitMqSendService {
+public abstract class AbstractRabbitMqProduceClient implements RabbitMqProduceClient {
     private TransactionSynchronization transactionSynchronization;
     private String application;
 
-    protected RabbitService rabbitService;
+    protected RabbitProducerService rabbitService;
 
-    protected AbstractRabbitMqSendService(
-        TransactionSynchronization transactionSynchronization,
-        String application
+    protected AbstractRabbitMqProduceClient(
+            TransactionSynchronization transactionSynchronization,
+            String application
     ) {
         this.transactionSynchronization = transactionSynchronization;
         this.application = application;

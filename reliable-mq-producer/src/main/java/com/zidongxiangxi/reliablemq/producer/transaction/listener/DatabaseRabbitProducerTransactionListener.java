@@ -1,9 +1,9 @@
 package com.zidongxiangxi.reliablemq.producer.transaction.listener;
 
 import com.alibaba.fastjson.JSON;
-import com.zidongxiangxi.reliabelmq.api.manager.ProducerManager;
+import com.zidongxiangxi.reliabelmq.api.manager.ProduceRecordManager;
 import com.zidongxiangxi.reliabelmq.api.entity.RabbitProducer;
-import com.zidongxiangxi.reliabelmq.api.producer.RabbitService;
+import com.zidongxiangxi.reliabelmq.api.producer.RabbitProducerService;
 import com.zidongxiangxi.reliablemq.producer.transaction.RabbitProducerTransactionMessageHolder;
 import com.zidongxiangxi.reliablemq.producer.transaction.RabbitTransactionContext;
 import lombok.extern.slf4j.Slf4j;
@@ -20,15 +20,15 @@ import java.util.Objects;
  */
 @Slf4j
 public class DatabaseRabbitProducerTransactionListener extends AbstractRabbitProducerTransactionListener {
-    private ProducerManager<RabbitProducer> producerManager;
-    private RabbitService rabbitService;
+    private ProduceRecordManager<RabbitProducer> producerManager;
+    private RabbitProducerService rabbitProducerService;
 
     public DatabaseRabbitProducerTransactionListener(
-        ProducerManager<RabbitProducer> producerManager,
-        RabbitService rabbitService
+        ProduceRecordManager<RabbitProducer> producerManager,
+        RabbitProducerService rabbitProducerService
     ) {
         this.producerManager = producerManager;
-        this.rabbitService = rabbitService;
+        this.rabbitProducerService = rabbitProducerService;
     }
 
     @Override
@@ -40,7 +40,7 @@ public class DatabaseRabbitProducerTransactionListener extends AbstractRabbitPro
         List<RabbitProducer> list = messageHolder.getQueue();
         for (RabbitProducer producer : list) {
             try {
-                producerManager.saveMqProducer(producer);
+                producerManager.saveRecord(producer);
             } catch (Throwable e) {
                 log.error("fail to save rabbit producer: " + JSON.toJSONString(producer), e);
             }
@@ -60,7 +60,7 @@ public class DatabaseRabbitProducerTransactionListener extends AbstractRabbitPro
         }
         for (RabbitProducer producer : messageHolder.getQueue()) {
             try {
-                rabbitService.send(producer);
+                rabbitProducerService.send(producer);
             } catch (Throwable t) {
                 log.error("fail to send message, [{}[", producer.toString(), t);
             }

@@ -1,7 +1,7 @@
 package com.zidongxiangxi.reliablemq.producer.scheduler;
 
 import com.zidongxiangxi.reliabelmq.api.entity.SequenceMessage;
-import com.zidongxiangxi.reliabelmq.api.manager.SequenceManager;
+import com.zidongxiangxi.reliabelmq.api.manager.ProduceSequenceRecordManager;
 import com.xxl.job.core.biz.model.ReturnT;
 import com.xxl.job.core.handler.IJobHandler;
 import com.xxl.job.core.handler.annotation.JobHandler;
@@ -19,15 +19,15 @@ import java.util.stream.Collectors;
  * @date 2019/12/24
  */
 @Slf4j
-@JobHandler(value = "sequenceClearJobHandler")
-public class SequenceClearJob extends IJobHandler {
+@JobHandler(value = "sequenceRecordClearJobHandler")
+public class SequenceRecordClearJob extends IJobHandler {
     private static final int MAX_BATCH_SIZE = 100;
-    private SequenceManager manager;
+    private ProduceSequenceRecordManager manager;
     private int retentionPeriod;
     private int batchSize;
     private int loopCount = 1;
 
-    public SequenceClearJob(SequenceManager manager, int retentionPeriod, int batchSize) {
+    public SequenceRecordClearJob(ProduceSequenceRecordManager manager, int retentionPeriod, int batchSize) {
         this.manager = manager;
         this.retentionPeriod = retentionPeriod;
         if (batchSize > MAX_BATCH_SIZE) {
@@ -52,12 +52,12 @@ public class SequenceClearJob extends IJobHandler {
     }
 
     private int clearRecord(Date beforeTime, int batchSize) {
-        List<SequenceMessage> sequenceMessages = manager.list(beforeTime, batchSize);
+        List<SequenceMessage> sequenceMessages = manager.listRecord(beforeTime, batchSize);
         if (CollectionUtils.isEmpty(sequenceMessages)) {
             return 0;
         }
         List<Long> ids = sequenceMessages.stream().map(SequenceMessage::getId).collect(Collectors.toList());
-        manager.deleteByIds(ids);
+        manager.deleteRecordByIds(ids);
         return ids.size();
     }
 }

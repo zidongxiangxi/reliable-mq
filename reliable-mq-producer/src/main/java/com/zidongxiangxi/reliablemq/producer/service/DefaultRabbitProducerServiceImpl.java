@@ -4,8 +4,8 @@ import com.alibaba.fastjson.JSON;
 import com.zidongxiangxi.reliabelmq.api.alarm.Alarm;
 import com.zidongxiangxi.reliabelmq.api.entity.RabbitProducer;
 import com.zidongxiangxi.reliabelmq.api.entity.enums.MessageTypeEnum;
-import com.zidongxiangxi.reliabelmq.api.manager.SequenceManager;
-import com.zidongxiangxi.reliabelmq.api.producer.RabbitService;
+import com.zidongxiangxi.reliabelmq.api.manager.ProduceSequenceRecordManager;
+import com.zidongxiangxi.reliabelmq.api.producer.RabbitProducerService;
 import com.zidongxiangxi.reliabelmq.api.util.RabbitUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
@@ -24,14 +24,14 @@ import java.util.Objects;
  * @date 2019/09/12
  */
 @Slf4j
-public class ClientRabbitServiceImpl implements RabbitService {
-    private SequenceManager sequenceManager;
+public class DefaultRabbitProducerServiceImpl implements RabbitProducerService {
+    private ProduceSequenceRecordManager sequenceRecordManager;
     private RabbitTemplate rabbitTemplate;
     private Alarm alarm;
 
-    public ClientRabbitServiceImpl(SequenceManager sequenceManager, RabbitTemplate rabbitTemplate,
-        ObjectProvider<Alarm> alarmProvider) {
-        this.sequenceManager = sequenceManager;
+    public DefaultRabbitProducerServiceImpl(ProduceSequenceRecordManager sequenceRecordManager, RabbitTemplate rabbitTemplate,
+                                            ObjectProvider<Alarm> alarmProvider) {
+        this.sequenceRecordManager = sequenceRecordManager;
         this.rabbitTemplate = rabbitTemplate;
         if (Objects.nonNull(alarmProvider)) {
             try {
@@ -39,13 +39,6 @@ public class ClientRabbitServiceImpl implements RabbitService {
             } catch (Throwable ignore) {}
         }
     }
-
-    public ClientRabbitServiceImpl(SequenceManager sequenceManager, RabbitTemplate rabbitTemplate, Alarm alarm) {
-        this.sequenceManager = sequenceManager;
-        this.rabbitTemplate = rabbitTemplate;
-        this.alarm = alarm;
-    }
-
 
     @Async
     @Override
@@ -64,9 +57,9 @@ public class ClientRabbitServiceImpl implements RabbitService {
     public void send(RabbitProducer producer) {
         try {
             Message message;
-            if (Objects.nonNull(sequenceManager)
+            if (Objects.nonNull(sequenceRecordManager)
                 && Objects.equals(producer.getType(), MessageTypeEnum.SEQUENCE.getValue())) {
-                String previousMessageId = sequenceManager.getPreviousMessageId(producer.getMessageId(),
+                String previousMessageId = sequenceRecordManager.getPreviousMessageId(producer.getMessageId(),
                     producer.getApplication());
                 message = RabbitUtils.generateMessage(producer, previousMessageId);
             } else {

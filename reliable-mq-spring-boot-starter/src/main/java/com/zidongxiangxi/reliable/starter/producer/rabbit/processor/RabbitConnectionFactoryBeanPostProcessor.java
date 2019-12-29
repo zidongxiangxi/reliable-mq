@@ -1,4 +1,4 @@
-package com.zidongxiangxi.reliablemq.producer.processor;
+package com.zidongxiangxi.reliable.starter.producer.rabbit.processor;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;

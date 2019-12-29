@@ -6,7 +6,7 @@ package com.zidongxiangxi.reliabelmq.api.producer;
  * @author chenxudong
  * @date 2019/09/17
  */
-public interface RabbitMqSendService {
+public interface RabbitMqProduceClient {
     /**
      * 发送消息到exchange
      *

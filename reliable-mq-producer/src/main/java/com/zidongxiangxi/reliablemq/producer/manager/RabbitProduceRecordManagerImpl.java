@@ -4,9 +4,9 @@ import com.zidongxiangxi.reliabelmq.api.constant.ProducerConstants;
 import com.zidongxiangxi.reliabelmq.api.entity.RabbitProducer;
 import com.zidongxiangxi.reliabelmq.api.entity.enums.MessageSendStatusEnum;
 import com.zidongxiangxi.reliabelmq.api.entity.enums.MessageTypeEnum;
-import com.zidongxiangxi.reliabelmq.api.manager.ProducerManager;
-import com.zidongxiangxi.reliabelmq.api.transaction.ProducerSqlProvider;
-import com.zidongxiangxi.reliabelmq.api.transaction.SequenceSqlProvider;
+import com.zidongxiangxi.reliabelmq.api.manager.ProduceRecordManager;
+import com.zidongxiangxi.reliabelmq.api.transaction.ProduceRecordSqlProvider;
+import com.zidongxiangxi.reliabelmq.api.transaction.ProduceSequenceRecordSqlProvider;
 import com.zidongxiangxi.reliablemq.producer.mapper.RabbitProducerMapper;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -18,37 +18,37 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * mq消息生产者manager
+ * mq消息生产记录manager
  *
  * @author chenxudong
  * @date 2019/08/30
  */
-public class RabbitProducerManagerImpl implements ProducerManager<RabbitProducer> {
+public class RabbitProduceRecordManagerImpl implements ProduceRecordManager<RabbitProducer> {
     private JdbcTemplate jdbcTemplate;
-    private ProducerSqlProvider producerSqlProvider;
-    private SequenceSqlProvider sequenceSqlProvider;
+    private ProduceRecordSqlProvider recordSqlProvider;
+    private ProduceSequenceRecordSqlProvider sequenceRecordSqlProvider;
 
-    public RabbitProducerManagerImpl(JdbcTemplate jdbcTemplate, ProducerSqlProvider producerSqlProvider) {
-        this(jdbcTemplate, producerSqlProvider, null);
+    public RabbitProduceRecordManagerImpl(JdbcTemplate jdbcTemplate, ProduceRecordSqlProvider recordSqlProvider) {
+        this(jdbcTemplate, recordSqlProvider, null);
     }
 
-    public RabbitProducerManagerImpl(JdbcTemplate jdbcTemplate, ProducerSqlProvider producerSqlProvider,
-        SequenceSqlProvider sequenceSqlProvider) {
+    public RabbitProduceRecordManagerImpl(JdbcTemplate jdbcTemplate, ProduceRecordSqlProvider recordSqlProvider,
+                                          ProduceSequenceRecordSqlProvider sequenceRecordSqlProvider) {
         this.jdbcTemplate = jdbcTemplate;
-        this.producerSqlProvider = producerSqlProvider;
-        this.sequenceSqlProvider = sequenceSqlProvider;
+        this.recordSqlProvider = recordSqlProvider;
+        this.sequenceRecordSqlProvider = sequenceRecordSqlProvider;
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean saveMqProducer(RabbitProducer producer) {
+    public boolean saveRecord(RabbitProducer producer) {
         if (Objects.isNull(producer.getMaxRetryTimes()) || producer.getMaxRetryTimes() > ProducerConstants.MAX_RETRY_TIMES) {
             producer.setMaxRetryTimes(ProducerConstants.MAX_RETRY_TIMES);
         }
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(new Date());
         calendar.add(Calendar.SECOND, 20);
-        int rows = jdbcTemplate.update(producerSqlProvider.getInsertMqSql(), producer.getApplication(),
+        int rows = jdbcTemplate.update(recordSqlProvider.getInsertSql(), producer.getApplication(),
             producer.getGroupName(), producer.getVirtualHost(), producer.getType(), producer.getExchange(),
             producer.getRoutingKey(), producer.getMessageId(), producer.getBody(),
             MessageSendStatusEnum.SENDING.getValue(), producer.getMaxRetryTimes(), calendar.getTime());
@@ -56,8 +56,8 @@ public class RabbitProducerManagerImpl implements ProducerManager<RabbitProducer
             return false;
         }
         if (Objects.equals(producer.getType(), MessageTypeEnum.SEQUENCE.getValue())
-            && Objects.nonNull(sequenceSqlProvider)) {
-            jdbcTemplate.update(sequenceSqlProvider.getInsertSql(), producer.getMessageId(), producer.getApplication(),
+            && Objects.nonNull(sequenceRecordSqlProvider)) {
+            jdbcTemplate.update(sequenceRecordSqlProvider.getInsertSql(), producer.getMessageId(), producer.getApplication(),
                 producer.getGroupName());
         }
         return true;
@@ -65,10 +65,10 @@ public class RabbitProducerManagerImpl implements ProducerManager<RabbitProducer
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean failSendMq(String application, String messageId) {
+    public boolean failToSend(String application, String messageId) {
         RabbitProducer producer = null;
         try {
-            producer = jdbcTemplate.queryForObject(producerSqlProvider.getSelectMqSql(), new RabbitProducerMapper(),
+            producer = jdbcTemplate.queryForObject(recordSqlProvider.getSelectSql(), new RabbitProducerMapper(),
                 application, messageId);
         } catch (EmptyResultDataAccessException ignore) {}
         if (Objects.isNull(producer)) {
@@ -78,34 +78,28 @@ public class RabbitProducerManagerImpl implements ProducerManager<RabbitProducer
         retryTimes = Math.max(retryTimes, 1);
         int rows;
         if (retryTimes >= producer.getMaxRetryTimes()) {
-            rows = jdbcTemplate.update(producerSqlProvider.getFailMqSql(), application, messageId);
+            rows = jdbcTemplate.update(recordSqlProvider.getUpdateStatusSql(), application, messageId);
         } else {
             int delaySecondIndex = Math.min(retryTimes, ProducerConstants.DELAY_SECONDS.length);
             delaySecondIndex = delaySecondIndex - 1;
             Calendar calendar = Calendar.getInstance();
             calendar.setTime(new Date());
             calendar.add(Calendar.SECOND, ProducerConstants.DELAY_SECONDS[delaySecondIndex]);
-            rows = jdbcTemplate.update(producerSqlProvider.getSendingMqSql(), retryTimes, calendar.getTime(), application, messageId);
+            rows = jdbcTemplate.update(recordSqlProvider.getUpdateRetrySql(), retryTimes, calendar.getTime(), application, messageId);
         }
         return rows > 0;
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean deleteMq(String application, String messageId) {
-        int rows = jdbcTemplate.update(producerSqlProvider.getDeleteMqSql(), application, messageId);
+    public boolean deleteRecord(String application, String messageId) {
+        int rows = jdbcTemplate.update(recordSqlProvider.getDeleteSql(), application, messageId);
         return rows > 0;
     }
 
     @Override
-    public List<RabbitProducer> listSendingMq(String application, int start, int limit) {
-        return jdbcTemplate.query(producerSqlProvider.getListSendingMqSql(), new RabbitProducerMapper(), application, start,
+    public List<RabbitProducer> listSendingRecord(String application, int start, int limit) {
+        return jdbcTemplate.query(recordSqlProvider.getListSendingSql(), new RabbitProducerMapper(), application, start,
             limit);
-    }
-
-    @Override
-    public List<RabbitProducer> listAllApplicationMq(MessageSendStatusEnum sendStatus, int start, int limit) {
-        return jdbcTemplate.query(producerSqlProvider.getListMqSql(), new RabbitProducerMapper(),
-            sendStatus.getValue(), start, limit);
     }
 }

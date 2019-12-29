@@ -1,8 +1,8 @@
 package com.zidongxiangxi.reliablemq.producer.manager;
 
 import com.zidongxiangxi.reliabelmq.api.entity.SequenceMessage;
-import com.zidongxiangxi.reliabelmq.api.manager.SequenceManager;
-import com.zidongxiangxi.reliabelmq.api.transaction.SequenceSqlProvider;
+import com.zidongxiangxi.reliabelmq.api.manager.ProduceSequenceRecordManager;
+import com.zidongxiangxi.reliabelmq.api.transaction.ProduceSequenceRecordSqlProvider;
 import com.zidongxiangxi.reliablemq.producer.mapper.SequenceMessageMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -20,12 +20,12 @@ import java.util.Map;
  * @author chenxudong
  * @date 2019/12/24
  */
-public class DefaultSequenceManager implements SequenceManager {
+public class DefaultProduceSequenceRecordManager implements ProduceSequenceRecordManager {
     private JdbcTemplate jdbcTemplate;
     private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
-    private SequenceSqlProvider sequenceSqlProvider;
+    private ProduceSequenceRecordSqlProvider sequenceSqlProvider;
 
-    public DefaultSequenceManager(JdbcTemplate jdbcTemplate, SequenceSqlProvider sequenceSqlProvider) {
+    public DefaultProduceSequenceRecordManager(JdbcTemplate jdbcTemplate, ProduceSequenceRecordSqlProvider sequenceSqlProvider) {
         this.jdbcTemplate = jdbcTemplate;
         this.namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(jdbcTemplate);
         this.sequenceSqlProvider = sequenceSqlProvider;
@@ -53,13 +53,13 @@ public class DefaultSequenceManager implements SequenceManager {
     }
 
     @Override
-    public List<SequenceMessage> list(Date beforeTime, int size) {
+    public List<SequenceMessage> listRecord(Date beforeTime, int size) {
         return jdbcTemplate.query(sequenceSqlProvider.getListSql(), new SequenceMessageMapper(), beforeTime, size);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean deleteByIds(List<Long> ids) {
+    public boolean deleteRecordByIds(List<Long> ids) {
         Map<String, Object> args = new HashMap<>(1);
         args.put("ids", ids);
         return namedParameterJdbcTemplate.update(sequenceSqlProvider.getDeleteSql(), args) > 0;

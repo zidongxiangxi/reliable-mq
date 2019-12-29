@@ -6,7 +6,7 @@ package com.zidongxiangxi.reliabelmq.api.transaction;
  * @author chenxudong
  * @date 2019/10/10
  */
-public interface SequenceSqlProvider {
+public interface ProduceSequenceRecordSqlProvider {
     /**
      * 获取插入顺序消息记录的语句
      *

@@ -1,7 +1,5 @@
 package com.zidongxiangxi.reliabelmq.api.manager;
 
-import com.zidongxiangxi.reliabelmq.api.entity.enums.MessageSendStatusEnum;
-
 import java.util.List;
 
 /**
@@ -10,23 +8,23 @@ import java.util.List;
  * @author chenxudong
  * @date 2019/08/30
  */
-public interface ProducerManager<T> {
+public interface ProduceRecordManager<T> {
     /**
-     * 保存消息
+     * 保存发送记录
      *
      * @param producer 消息体
      * @return 是否成功
      */
-    boolean saveMqProducer(T producer);
+    boolean saveRecord(T producer);
 
     /**
-     * 消息发送失败
+     * 消息发送失败，修改记录的状态
      *
      * @param application 应用名称
      * @param messageId 消息id
      * @return 是否成功
      */
-    boolean failSendMq(String application, String messageId);
+    boolean failToSend(String application, String messageId);
 
     /**
      * 删除消息
@@ -35,7 +33,7 @@ public interface ProducerManager<T> {
      * @param messageId 消息id
      * @return 是否成功
      */
-    boolean deleteMq(String application, String messageId);
+    boolean deleteRecord(String application, String messageId);
 
     /**
      * 查询发送中的消息
@@ -45,15 +43,5 @@ public interface ProducerManager<T> {
      * @param limit 数量
      * @return 消息列表
      */
-    List<T> listSendingMq(String application, int start, int limit);
-
-    /**
-     * 根据状态查询全部应用的消息
-     *
-     * @param sendStatus 发送状态
-     * @param start 起始
-     * @param limit 数量
-     * @return 消息列表
-     */
-    List<T> listAllApplicationMq(MessageSendStatusEnum sendStatus, int start, int limit);
+    List<T> listSendingRecord(String application, int start, int limit);
 }

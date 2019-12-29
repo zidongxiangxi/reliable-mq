@@ -10,7 +10,7 @@ import java.util.List;
  * @author chenxudong
  * @date 2019/12/24
  */
-public interface RabbitService {
+public interface RabbitProducerService {
     /**
      * 批量发送mq消息
      *

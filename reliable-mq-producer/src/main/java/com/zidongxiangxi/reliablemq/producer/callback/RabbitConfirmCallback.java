@@ -5,7 +5,7 @@ import com.zidongxiangxi.reliabelmq.api.alarm.Alarm;
 import com.zidongxiangxi.reliabelmq.api.entity.rabbit.RabbitCorrelationId;
 import com.zidongxiangxi.reliabelmq.api.entity.RabbitProducer;
 import com.zidongxiangxi.reliabelmq.api.exception.ReliableMqException;
-import com.zidongxiangxi.reliabelmq.api.manager.ProducerManager;
+import com.zidongxiangxi.reliabelmq.api.manager.ProduceRecordManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -21,10 +21,10 @@ import java.util.Objects;
  */
 @Slf4j
 public class RabbitConfirmCallback implements RabbitTemplate.ConfirmCallback {
-    private ProducerManager<RabbitProducer> producerManager;
+    private ProduceRecordManager<RabbitProducer> producerManager;
     private Alarm alarm;
 
-    public RabbitConfirmCallback(ProducerManager<RabbitProducer> producerManager, Alarm alarm) {
+    public RabbitConfirmCallback(ProduceRecordManager<RabbitProducer> producerManager, Alarm alarm) {
         this.producerManager = producerManager;
         this.alarm = alarm;
     }
@@ -42,7 +42,7 @@ public class RabbitConfirmCallback implements RabbitTemplate.ConfirmCallback {
                 }
                 if (ack) {
                     log.info("success to send message, correlationId:{}", correlationData.getId());
-                    producerManager.deleteMq(id.getApplication(), id.getMessageId());
+                    producerManager.deleteRecord(id.getApplication(), id.getMessageId());
                 } else {
                     throw new ReliableMqException("fail to send message, correlationId:" + correlationData.getId());
                 }

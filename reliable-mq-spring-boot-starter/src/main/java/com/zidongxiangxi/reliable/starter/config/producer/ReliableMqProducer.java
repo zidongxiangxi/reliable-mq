@@ -22,12 +22,12 @@ public class ReliableMqProducer {
     /**
      * rabbitMq发送表
      */
-    private String producerTableName = "rabbit_producer";
+    private String producerTableName = "rabbit_produce_record";
 
     /**
      * 顺序消息表
      */
-    private String sequenceTableName = "sequence_message";
+    private String sequenceTableName = "produce_sequence_record";
 
     /**
      * 重试配置

@@ -11,7 +11,7 @@ import java.util.List;
  * @author chenxudong
  * @date 2019/12/24
  */
-public interface SequenceManager {
+public interface ProduceSequenceRecordManager {
     /**
      * 获取顺序消息的上一个消息id
      *
@@ -28,7 +28,7 @@ public interface SequenceManager {
      * @param size 数量
      * @return 顺序消息记录列表
      */
-    List<SequenceMessage> list(Date beforeTime, int size);
+    List<SequenceMessage> listRecord(Date beforeTime, int size);
 
     /**
      * 根据主键删除顺序消息记录
@@ -36,5 +36,5 @@ public interface SequenceManager {
      * @param ids 主键列表
      * @return 是否删除成功
      */
-    boolean deleteByIds(List<Long> ids);
+    boolean deleteRecordByIds(List<Long> ids);
 }

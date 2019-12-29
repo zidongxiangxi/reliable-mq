@@ -2,24 +2,24 @@ package com.zidongxiangxi.reliable.starter.producer.rabbit;
 
 import com.zidongxiangxi.reliabelmq.api.alarm.Alarm;
 import com.zidongxiangxi.reliabelmq.api.entity.RabbitProducer;
-import com.zidongxiangxi.reliabelmq.api.manager.ProducerManager;
-import com.zidongxiangxi.reliabelmq.api.manager.SequenceManager;
-import com.zidongxiangxi.reliabelmq.api.producer.RabbitMqSendService;
-import com.zidongxiangxi.reliabelmq.api.producer.RabbitService;
-import com.zidongxiangxi.reliabelmq.api.transaction.ProducerSqlProvider;
-import com.zidongxiangxi.reliabelmq.api.transaction.SequenceSqlProvider;
+import com.zidongxiangxi.reliabelmq.api.manager.ProduceRecordManager;
+import com.zidongxiangxi.reliabelmq.api.manager.ProduceSequenceRecordManager;
+import com.zidongxiangxi.reliabelmq.api.producer.RabbitMqProduceClient;
+import com.zidongxiangxi.reliabelmq.api.producer.RabbitProducerService;
+import com.zidongxiangxi.reliabelmq.api.transaction.ProduceRecordSqlProvider;
+import com.zidongxiangxi.reliabelmq.api.transaction.ProduceSequenceRecordSqlProvider;
 import com.zidongxiangxi.reliabelmq.api.transaction.TransactionListener;
 import com.zidongxiangxi.reliable.starter.config.ReliableMqProperties;
-import com.zidongxiangxi.reliablemq.producer.DatabaseRabbitMqSendService;
-import com.zidongxiangxi.reliablemq.producer.manager.RabbitProducerManagerImpl;
-import com.zidongxiangxi.reliable.starter.processor.rabbit.producer.RabbitConnectionFactoryBeanPostProcessor;
-import com.zidongxiangxi.reliable.starter.processor.rabbit.producer.RabbitTemplateBeanPostProcessor;
-import com.zidongxiangxi.reliablemq.producer.scheduler.RabbitSendMqJob;
-import com.zidongxiangxi.reliablemq.producer.service.ClientRabbitServiceImpl;
+import com.zidongxiangxi.reliablemq.producer.DatabaseRabbitMqProduceClient;
+import com.zidongxiangxi.reliablemq.producer.manager.RabbitProduceRecordManagerImpl;
+import com.zidongxiangxi.reliable.starter.producer.rabbit.processor.RabbitConnectionFactoryBeanPostProcessor;
+import com.zidongxiangxi.reliable.starter.producer.rabbit.processor.RabbitTemplateBeanPostProcessor;
+import com.zidongxiangxi.reliablemq.producer.scheduler.RabbitRetrySendJob;
+import com.zidongxiangxi.reliablemq.producer.service.DefaultRabbitProducerServiceImpl;
 import com.zidongxiangxi.reliablemq.producer.transaction.DefaultTransactionSynchronization;
 import com.zidongxiangxi.reliablemq.producer.transaction.listener.DatabaseRabbitProducerTransactionListener;
-import com.zidongxiangxi.reliablemq.producer.transaction.sql.DefaultRabbitProducerSqlProvider;
-import com.zidongxiangxi.reliablemq.producer.transaction.sql.DefaultSequenceSqlProvider;
+import com.zidongxiangxi.reliablemq.producer.transaction.sql.RabbitProduceRecordSqlProvider;
+import com.zidongxiangxi.reliablemq.producer.transaction.sql.DefaultProduceSequenceRecordSqlProvider;
 import com.zidongxiangxi.reliable.starter.config.producer.ReliableMqProducer;
 import com.xxl.job.core.handler.IJobHandler;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -49,12 +49,12 @@ public class ReliableMqRabbitProducerConfiguration {
      * @return mq消息的数据库manager
      */
     @Bean
-    @ConditionalOnMissingBean(name = {"rabbitProducerManager"})
-    public ProducerManager<RabbitProducer> rabbitProducerManager(JdbcTemplate jdbcTemplate, ReliableMqProducer producer) {
-        ProducerSqlProvider producerSqlProvider =
-            new DefaultRabbitProducerSqlProvider(producer.getProducerTableName());
-        SequenceSqlProvider sequenceSqlProvider = new DefaultSequenceSqlProvider(producer.getSequenceTableName());
-        return new RabbitProducerManagerImpl(jdbcTemplate, producerSqlProvider, sequenceSqlProvider);
+    public ProduceRecordManager<RabbitProducer> rabbitProduceRecordManager(JdbcTemplate jdbcTemplate, ReliableMqProducer producer) {
+        ProduceRecordSqlProvider recordSqlProvider =
+            new RabbitProduceRecordSqlProvider(producer.getProducerTableName());
+        ProduceSequenceRecordSqlProvider sequenceRecordSqlProvider =
+            new DefaultProduceSequenceRecordSqlProvider(producer.getSequenceTableName());
+        return new RabbitProduceRecordManagerImpl(jdbcTemplate, recordSqlProvider, sequenceRecordSqlProvider);
     }
 
     /**
@@ -65,7 +65,7 @@ public class ReliableMqRabbitProducerConfiguration {
      */
     @Bean
     public RabbitTemplateBeanPostProcessor rabbitTemplateBeanPostProcessor(
-        ProducerManager<RabbitProducer> producerManager,
+        ProduceRecordManager<RabbitProducer> producerManager,
         ObjectProvider<Alarm> alarmProvider
     ) {
         return new RabbitTemplateBeanPostProcessor(producerManager, alarmProvider);
@@ -89,15 +89,15 @@ public class ReliableMqRabbitProducerConfiguration {
      * @return 消息发送类
      */
     @Bean
-    @ConditionalOnMissingBean(RabbitMqSendService.class)
-    public RabbitMqSendService rabbitMqSendService(
-        ProducerManager<RabbitProducer> producerManager,
-        RabbitService rabbitService,
+    @ConditionalOnMissingBean(RabbitMqProduceClient.class)
+    public RabbitMqProduceClient rabbitMqSendClient(
+        ProduceRecordManager<RabbitProducer> producerManager,
+        RabbitProducerService rabbitService,
         ReliableMqProperties properties
     ) {
         TransactionListener transactionListener = new DatabaseRabbitProducerTransactionListener(producerManager, rabbitService);
         TransactionSynchronization synchronization = new DefaultTransactionSynchronization(transactionListener);
-        return new DatabaseRabbitMqSendService(synchronization, properties.getApplication(), rabbitService,
+        return new DatabaseRabbitMqProduceClient(synchronization, properties.getApplication(), rabbitService,
             producerManager);
     }
 
@@ -109,13 +109,13 @@ public class ReliableMqRabbitProducerConfiguration {
      * @return 异步消息发送service
      */
     @Bean
-    @ConditionalOnMissingBean(RabbitService.class)
-    public RabbitService rabbitService(
-        SequenceManager sequenceManager,
+    @ConditionalOnMissingBean(RabbitProducerService.class)
+    public RabbitProducerService rabbitProducerService(
+        ProduceSequenceRecordManager sequenceManager,
         RabbitTemplate rabbitTemplate,
         ObjectProvider<Alarm> alarmProvider
     ) {
-        return new ClientRabbitServiceImpl(sequenceManager, rabbitTemplate, alarmProvider);
+        return new DefaultRabbitProducerServiceImpl(sequenceManager, rabbitTemplate, alarmProvider);
     }
 
     /**
@@ -132,11 +132,11 @@ public class ReliableMqRabbitProducerConfiguration {
          * @return 重试发送任务
          */
         @Bean
-        @ConditionalOnMissingBean(RabbitSendMqJob.class)
+        @ConditionalOnMissingBean(RabbitRetrySendJob.class)
         @ConditionalOnProperty(prefix = "reliable-mq.producer.rely", name = "enabled", havingValue = "true", matchIfMissing = true)
-        public RabbitSendMqJob rabbitSendMqJob(ProducerManager<RabbitProducer> producerManager,
-            RabbitService rabbitService, ReliableMqProperties properties) {
-            return new RabbitSendMqJob(producerManager, rabbitService, properties.getApplication(),
+        public RabbitRetrySendJob rabbitRetrySendJob(ProduceRecordManager<RabbitProducer> producerManager,
+            RabbitProducerService rabbitService, ReliableMqProperties properties) {
+            return new RabbitRetrySendJob(producerManager, rabbitService, properties.getApplication(),
                 properties.getProducer().getRely().getBatchSize());
         }
     }

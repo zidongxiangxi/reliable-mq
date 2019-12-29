@@ -1,4 +1,4 @@
-CREATE TABLE `rabbit_producer` (
+CREATE TABLE `rabbit_producer_record` (
   `id` BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '自增主键',
   `type` TINYINT(3) NOT NULL DEFAULT 0 COMMENT '消息类型，0=即时消息，1=顺序消息',
   `application` VARCHAR(50) NOT NULL COMMENT '应用名称',
@@ -18,7 +18,7 @@ CREATE TABLE `rabbit_producer` (
   UNIQUE KEY `idx_message_app` (`message_id`, `application`)
 ) ENGINE = InnoDB DEFAULT CHARACTER SET = utf8mb4 COMMENT = 'rabbitMq发送表';
 
-CREATE TABLE `sequence_message` (
+CREATE TABLE `producer_sequence_record` (
   `id` BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '消息id',
   `message_id` VARCHAR(50) NOT NULL COMMENT '消息id',
   `application` VARCHAR(50) NOT NULL COMMENT '应用名称',

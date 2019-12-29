@@ -6,53 +6,46 @@ package com.zidongxiangxi.reliabelmq.api.transaction;
  * @author chenxudong
  * @date 2019/08/30
  */
-public interface ProducerSqlProvider {
+public interface ProduceRecordSqlProvider {
     /**
      * 获取插入语句
      *
      * @return sql语句
      */
-    String getInsertMqSql();
+    String getInsertSql();
 
     /**
-     * 获取查询语句
+     * 获取单个查询语句
      *
      * @return sql语句
      */
-    String getSelectMqSql();
+    String getSelectSql();
 
     /**
-     * 获取发送中语句
+     * 获取修改重试信息语句
      *
      * @return sql语句
      */
-    String getSendingMqSql();
+    String getUpdateRetrySql();
 
     /**
-     * 获取发送失败语句
+     * 获取修改状态语句
      *
      * @return sql语句
      */
-    String getFailMqSql();
+    String getUpdateStatusSql();
 
     /**
      * 获取删除语句
      *
      * @return sql语句
      */
-    String getDeleteMqSql();
+    String getDeleteSql();
 
     /**
-     * 获取发送中列表语句
+     * 获取查询列表语句
      *
      * @return sql语句
      */
-    String getListSendingMqSql();
-
-    /**
-     * 获取mq列表语句
-     *
-     * @return sql语句
-     */
-    String getListMqSql();
+    String getListSendingSql();
 }

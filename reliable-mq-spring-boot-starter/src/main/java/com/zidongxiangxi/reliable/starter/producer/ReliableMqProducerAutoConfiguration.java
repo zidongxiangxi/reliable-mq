@@ -1,9 +1,9 @@
 package com.zidongxiangxi.reliable.starter.producer;
 
-import com.zidongxiangxi.reliabelmq.api.manager.SequenceManager;
-import com.zidongxiangxi.reliablemq.producer.manager.DefaultSequenceManager;
-import com.zidongxiangxi.reliablemq.producer.scheduler.SequenceClearJob;
-import com.zidongxiangxi.reliablemq.producer.transaction.sql.DefaultSequenceSqlProvider;
+import com.zidongxiangxi.reliabelmq.api.manager.ProduceSequenceRecordManager;
+import com.zidongxiangxi.reliablemq.producer.manager.DefaultProduceSequenceRecordManager;
+import com.zidongxiangxi.reliablemq.producer.scheduler.SequenceRecordClearJob;
+import com.zidongxiangxi.reliablemq.producer.transaction.sql.DefaultProduceSequenceRecordSqlProvider;
 import com.zidongxiangxi.reliable.starter.config.producer.ReliableMqProducer;
 import com.zidongxiangxi.reliable.starter.config.producer.ReliableMqProducerRely;
 import com.zidongxiangxi.reliable.starter.config.producer.ReliableMqProducerSequence;
@@ -40,9 +40,9 @@ public class ReliableMqProducerAutoConfiguration {
      */
     @Bean
     @ConditionalOnBean(JdbcTemplate.class)
-    public SequenceManager sequenceManager(JdbcTemplate jdbcTemplate, ReliableMqProducer producer) {
-        return new DefaultSequenceManager(jdbcTemplate,
-            new DefaultSequenceSqlProvider(producer.getSequenceTableName()));
+    public ProduceSequenceRecordManager produceSequenceRecordManager(JdbcTemplate jdbcTemplate, ReliableMqProducer producer) {
+        return new DefaultProduceSequenceRecordManager(jdbcTemplate,
+            new DefaultProduceSequenceRecordSqlProvider(producer.getSequenceTableName()));
     }
 
     /**
@@ -58,10 +58,10 @@ public class ReliableMqProducerAutoConfiguration {
          * @return 重试发送任务
          */
         @Bean
-        @ConditionalOnMissingBean(SequenceClearJob.class)
+        @ConditionalOnMissingBean(SequenceRecordClearJob.class)
         @ConditionalOnProperty(prefix = "reliable-mq.producer.sequence", name = "enabled-clear", havingValue = "true")
-        public SequenceClearJob sequenceClearJob(SequenceManager sequenceManager, ReliableMqProducer producer) {
-            return new SequenceClearJob(sequenceManager, producer.getSequence().getRetentionPeriod(),
+        public SequenceRecordClearJob sequenceRecordClearJob(ProduceSequenceRecordManager sequenceManager, ReliableMqProducer producer) {
+            return new SequenceRecordClearJob(sequenceManager, producer.getSequence().getRetentionPeriod(),
                 producer.getSequence().getBatchSize());
         }
     }

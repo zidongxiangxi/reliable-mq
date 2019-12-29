@@ -1,8 +1,8 @@
 package com.zidongxiangxi.reliablemq.producer;
 
 import com.zidongxiangxi.reliabelmq.api.entity.RabbitProducer;
-import com.zidongxiangxi.reliabelmq.api.manager.ProducerManager;
-import com.zidongxiangxi.reliabelmq.api.producer.RabbitService;
+import com.zidongxiangxi.reliabelmq.api.manager.ProduceRecordManager;
+import com.zidongxiangxi.reliabelmq.api.producer.RabbitProducerService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.util.StringUtils;
@@ -17,15 +17,15 @@ import java.util.UUID;
  * @date 2019/09/14
  */
 @Slf4j
-public class DatabaseRabbitMqSendService extends AbstractRabbitMqSendService {
-    private ProducerManager<RabbitProducer> producerManager;
+public class DatabaseRabbitMqProduceClient extends AbstractRabbitMqProduceClient {
+    private ProduceRecordManager<RabbitProducer> producerManager;
     private String virtualHost;
 
-    public DatabaseRabbitMqSendService(
-        TransactionSynchronization transactionSynchronization,
-        String application,
-        RabbitService rabbitService,
-        ProducerManager<RabbitProducer> producerManager
+    public DatabaseRabbitMqProduceClient(
+            TransactionSynchronization transactionSynchronization,
+            String application,
+            RabbitProducerService rabbitService,
+            ProduceRecordManager<RabbitProducer> producerManager
     ) {
         super(transactionSynchronization, application);
         this.rabbitService = rabbitService;
@@ -42,7 +42,7 @@ public class DatabaseRabbitMqSendService extends AbstractRabbitMqSendService {
             stashProducer(producer);
         } else if (Objects.nonNull(producerManager)) {
             try {
-                producerManager.saveMqProducer(producer);
+                producerManager.saveRecord(producer);
             } catch (Exception e) {
                 log.error("fai to save message, [{}]", producer.toString(), e);
             }
@@ -76,7 +76,7 @@ public class DatabaseRabbitMqSendService extends AbstractRabbitMqSendService {
             stashProducer(producer);
         } else if (Objects.nonNull(producerManager)) {
             try {
-                producerManager.saveMqProducer(producer);
+                producerManager.saveRecord(producer);
             } catch (Exception e) {
                 log.error("fai to save sequence message, [{}]", producer.toString(), e);
             }

@@ -1,6 +1,6 @@
 package com.zidongxiangxi.reliablemq.producer.transaction.sql;
 
-import com.zidongxiangxi.reliabelmq.api.transaction.SequenceSqlProvider;
+import com.zidongxiangxi.reliabelmq.api.transaction.ProduceSequenceRecordSqlProvider;
 import org.springframework.util.StringUtils;
 
 /**
@@ -9,8 +9,8 @@ import org.springframework.util.StringUtils;
  * @author chenxudong
  * @date 2019/10/10
  */
-public class DefaultSequenceSqlProvider implements SequenceSqlProvider {
-    private static final String DEFAULT_TABLE_NAME = "sequence_message";
+public class DefaultProduceSequenceRecordSqlProvider implements ProduceSequenceRecordSqlProvider {
+    private static final String DEFAULT_TABLE_NAME = "produce_sequence_record";
     private static final String INSERT_SQL = "insert into %s (message_id, application, group_name) values (?, ?, ?)";
     private static final String SELECT_BY_ID_SQL = "select * from %s where id=?";
     private static final String SELECT_BY_MESSAGE_ID_SQL = "select * from %s where application=? and message_id=?";
@@ -22,11 +22,11 @@ public class DefaultSequenceSqlProvider implements SequenceSqlProvider {
 
     private String insertSql, selectByIdSql, selectByMessageId, selectPreviousId, listSql, deleteSql;
 
-    public DefaultSequenceSqlProvider() {
+    public DefaultProduceSequenceRecordSqlProvider() {
         this(DEFAULT_TABLE_NAME);
     }
 
-    public DefaultSequenceSqlProvider(String tableName) {
+    public DefaultProduceSequenceRecordSqlProvider(String tableName) {
         tableName = StringUtils.isEmpty(tableName) ? DEFAULT_TABLE_NAME : tableName;
         insertSql = String.format(INSERT_SQL, tableName);
         selectByIdSql = String.format(SELECT_BY_ID_SQL, tableName);

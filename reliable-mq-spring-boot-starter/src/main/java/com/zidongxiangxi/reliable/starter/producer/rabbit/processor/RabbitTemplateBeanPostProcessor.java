@@ -1,8 +1,8 @@
-package com.zidongxiangxi.reliable.starter.processor.rabbit.producer;
+package com.zidongxiangxi.reliable.starter.producer.rabbit.processor;
 
 import com.zidongxiangxi.reliabelmq.api.alarm.Alarm;
 import com.zidongxiangxi.reliabelmq.api.entity.RabbitProducer;
-import com.zidongxiangxi.reliabelmq.api.manager.ProducerManager;
+import com.zidongxiangxi.reliabelmq.api.manager.ProduceRecordManager;
 import com.zidongxiangxi.reliablemq.producer.callback.RabbitConfirmCallback;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -21,10 +21,10 @@ import java.util.Objects;
  */
 @Slf4j
 public class RabbitTemplateBeanPostProcessor implements BeanPostProcessor, Ordered {
-    private ProducerManager<RabbitProducer> producerManager;
+    private ProduceRecordManager<RabbitProducer> producerManager;
     private Alarm alarm;
 
-    public RabbitTemplateBeanPostProcessor(ProducerManager<RabbitProducer> producerManager,
+    public RabbitTemplateBeanPostProcessor(ProduceRecordManager<RabbitProducer> producerManager,
         ObjectProvider<Alarm> alarmProvider) {
         this.producerManager = producerManager;
         if (Objects.nonNull(alarmProvider)) {

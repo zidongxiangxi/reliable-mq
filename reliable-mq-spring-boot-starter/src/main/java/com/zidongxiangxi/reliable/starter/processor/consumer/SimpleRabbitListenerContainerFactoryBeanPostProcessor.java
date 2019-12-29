@@ -1,4 +1,4 @@
-package com.zidongxiangxi.reliable.starter.processor.rabbit.consumer;
+package com.zidongxiangxi.reliable.starter.processor.consumer;
 
 import com.zidongxiangxi.reliablemq.consumer.interceptor.SequenceOperationsInterceptor;
 import com.zidongxiangxi.reliablemq.consumer.interceptor.TransactionIdempotentOperationsInterceptor;
