@@ -3,22 +3,19 @@ package com.zidongxiangxi.reliable.starter.consumer.rabbit;
 import com.zidongxiangxi.reliabelmq.api.alarm.Alarm;
 import com.zidongxiangxi.reliabelmq.api.manager.ConsumeFailRecordManager;
 import com.zidongxiangxi.reliabelmq.api.manager.ConsumeRecordManager;
-import com.zidongxiangxi.reliable.starter.config.consumer.ReliableMqConsumerSequence;
+import com.zidongxiangxi.reliable.starter.config.consumer.ReliableMqConsumerRabbit;
+import com.zidongxiangxi.reliable.starter.config.consumer.ReliableMqConsumerRely;
 import com.zidongxiangxi.reliablemq.consumer.constant.BeanNameConstants;
-import com.zidongxiangxi.reliablemq.consumer.interceptor.SequenceOperationsInterceptor;
-import com.zidongxiangxi.reliablemq.consumer.interceptor.TransactionIdempotentOperationsInterceptor;
-import com.zidongxiangxi.reliablemq.consumer.manager.DefaultConsumeFailRecordManager;
+import com.zidongxiangxi.reliablemq.consumer.interceptor.RabbitSequenceOperationsInterceptor;
+import com.zidongxiangxi.reliablemq.consumer.interceptor.RabbitIdempotentOperationsInterceptor;
 import com.zidongxiangxi.reliable.starter.consumer.rabbit.processor.RabbitListenerContainerBeanPostProcessor;
 import com.zidongxiangxi.reliable.starter.consumer.rabbit.processor.SimpleRabbitListenerContainerFactoryBeanPostProcessor;
 import com.zidongxiangxi.reliablemq.consumer.rely.RabbitDatabaseMessageRecover;
-import com.zidongxiangxi.reliablemq.consumer.transaction.DefaultConsumeFailRecordSqlProvider;
-import com.zidongxiangxi.reliable.starter.config.consumer.ReliableMqConsumerRely;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.config.RetryInterceptorBuilder;
+import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
 import org.springframework.amqp.rabbit.retry.MessageRecoverer;
 import org.springframework.amqp.rabbit.retry.RejectAndDontRequeueRecoverer;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.autoconfigure.amqp.RabbitProperties;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -26,7 +23,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.context.properties.PropertyMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.retry.backoff.ExponentialBackOffPolicy;
 import org.springframework.retry.interceptor.RetryOperationsInterceptor;
 import org.springframework.retry.policy.SimpleRetryPolicy;
@@ -43,8 +39,13 @@ import java.util.Objects;
  * @date 2019/12/23
  */
 @Configuration
-@ConditionalOnClass(RabbitListener.class)
+@ConditionalOnClass(SimpleMessageListenerContainer.class)
+@ConditionalOnProperty(prefix = "reliable-mq.consumer.rabbit", name = "enabled", havingValue = "true")
 public class ReliableMqRabbitConsumerConfiguration {
+    private ReliableMqConsumerRabbit rabbitProperties;
+    public ReliableMqRabbitConsumerConfiguration(ReliableMqConsumerRabbit rabbitProperties) {
+        this.rabbitProperties = rabbitProperties;
+    }
     /**
      * 定义幂等消费的拦截器
      *
@@ -52,27 +53,26 @@ public class ReliableMqRabbitConsumerConfiguration {
      * @param transactionTemplate spring事务template
      * @return 幂等消费的拦截器
      */
-    @Bean(name = BeanNameConstants.INTERNAL_IDEMPOTENT_OPERATIONS_INTERCEPTOR)
-    @ConditionalOnMissingBean(TransactionIdempotentOperationsInterceptor.class)
-    @ConditionalOnProperty(prefix = "reliable-mq.consumer.idempotent", name = "enabled", havingValue = "true")
-    public TransactionIdempotentOperationsInterceptor idempotentOperationsInterceptor(
+    @Bean(name = BeanNameConstants.INTERNAL_RABBIT_IDEMPOTENT_OPERATIONS_INTERCEPTOR)
+    @ConditionalOnMissingBean(RabbitIdempotentOperationsInterceptor.class)
+    @ConditionalOnProperty(prefix = "reliable-mq.consumer.rabbit.idempotent", name = "enabled", havingValue = "true")
+    public RabbitIdempotentOperationsInterceptor idempotentOperationsInterceptor(
         ConsumeRecordManager consumeRecordManager, TransactionTemplate transactionTemplate) {
-        return new TransactionIdempotentOperationsInterceptor(consumeRecordManager, transactionTemplate);
+        return new RabbitIdempotentOperationsInterceptor(consumeRecordManager, transactionTemplate);
     }
 
     /**
      * 定义顺序消费拦截器
      *
      * @param consumeRecordManager 消费记录manager
-     * @param sequence 顺序消费配置
      * @return 顺序消费拦截器
      */
-    @Bean(name = BeanNameConstants.INTERNAL_SEQUENCE_OPERATIONS_INTERCEPTOR)
-    @ConditionalOnMissingBean(SequenceOperationsInterceptor.class)
-    @ConditionalOnProperty(prefix = "reliable-mq.consumer.sequence", name = "enabled", havingValue = "true")
-    public SequenceOperationsInterceptor sequenceOperationsInterceptor(ConsumeRecordManager consumeRecordManager,
-        ReliableMqConsumerSequence sequence) {
-        return new SequenceOperationsInterceptor(consumeRecordManager, sequence.getConsumeFailDelay(), sequence.getFaultTolerantTime());
+    @Bean(name = BeanNameConstants.INTERNAL_RABBIT_SEQUENCE_OPERATIONS_INTERCEPTOR)
+    @ConditionalOnMissingBean(RabbitSequenceOperationsInterceptor.class)
+    @ConditionalOnProperty(prefix = "reliable-mq.consumer.rabbit.sequence", name = "enabled", havingValue = "true")
+    public RabbitSequenceOperationsInterceptor sequenceOperationsInterceptor(ConsumeRecordManager consumeRecordManager) {
+        return new RabbitSequenceOperationsInterceptor(consumeRecordManager, rabbitProperties.getSequence().getConsumeFailDelay(),
+                rabbitProperties.getSequence().getFaultTolerantTime());
     }
 
     /**
@@ -83,53 +83,24 @@ public class ReliableMqRabbitConsumerConfiguration {
      */
     @Bean
     public SimpleRabbitListenerContainerFactoryBeanPostProcessor simpleRabbitListenerContainerFactoryBeanPostProcessor(
-        ObjectProvider<SequenceOperationsInterceptor> sequenceInterceptorProvider,
+        ObjectProvider<RabbitSequenceOperationsInterceptor> sequenceInterceptorProvider,
         ObjectProvider<RetryOperationsInterceptor> retryInterceptorProvider,
-        ObjectProvider<TransactionIdempotentOperationsInterceptor> idempotentInterceptorProvider
+        ObjectProvider<RabbitIdempotentOperationsInterceptor> idempotentInterceptorProvider
     ) {
         return new SimpleRabbitListenerContainerFactoryBeanPostProcessor(sequenceInterceptorProvider,
             retryInterceptorProvider, idempotentInterceptorProvider);
     }
 
     /**
-     * 定义rabbit的监听容器bean的后置加工
-     * 该加工厂将“幂等消费拦截器”、“顺序消费拦截器”和“消费失败告警和保存”的bean设置到监听容器中
-     *
-     * @return rabbit的监听容器bean的后置加工
-     */
-    @Bean
-    public RabbitListenerContainerBeanPostProcessor rabbitListenerContainerBeanPostProcessor(
-        ObjectProvider<SequenceOperationsInterceptor> sequenceInterceptorProvider,
-        ObjectProvider<RetryOperationsInterceptor> retryInterceptorProvider,
-        ObjectProvider<TransactionIdempotentOperationsInterceptor> idempotentInterceptorProvider
-    ) {
-        return new RabbitListenerContainerBeanPostProcessor(sequenceInterceptorProvider, retryInterceptorProvider, idempotentInterceptorProvider);
-    }
-
-    /**
      * rabbit可靠消费（消费失败告警和保存）的配置
      * 只有在mq消息消费失败后，不放回队列，才生效
      */
-    @ConditionalOnProperty(prefix = "reliable-mq.consumer.rely", name = "enabled", havingValue = "true")
-    @EnableConfigurationProperties(RabbitProperties.class)
+    @ConditionalOnProperty(prefix = "reliable-mq.consumer.rabbit.rely", name = "enabled", havingValue = "true")
+    @EnableConfigurationProperties(ReliableMqConsumerRabbit.class)
     protected static class ReliableMqRabbitRelyConsumeConfiguration {
-        private RabbitProperties rabbitProperties;
-        public ReliableMqRabbitRelyConsumeConfiguration(RabbitProperties rabbitProperties) {
+        private ReliableMqConsumerRabbit rabbitProperties;
+        public ReliableMqRabbitRelyConsumeConfiguration(ReliableMqConsumerRabbit rabbitProperties) {
             this.rabbitProperties = rabbitProperties;
-        }
-
-        /**
-         * 定义消息消费失败记录manager
-         *
-         * @param jdbcTemplate jdbcTemplate
-         * @param rely 可靠消费配置
-         * @return 消息消费失败记录manager
-         */
-        @Bean
-        @ConditionalOnMissingBean(ConsumeFailRecordManager.class)
-        public ConsumeFailRecordManager rabbitConsumeFailManager(JdbcTemplate jdbcTemplate, ReliableMqConsumerRely rely) {
-            return new DefaultConsumeFailRecordManager(jdbcTemplate,
-                new DefaultConsumeFailRecordSqlProvider(rely.getConsumeFailRecordTableName()));
         }
 
         /**
@@ -141,7 +112,6 @@ public class ReliableMqRabbitConsumerConfiguration {
          */
         @Bean
         @ConditionalOnMissingBean(MessageRecoverer.class)
-        @ConditionalOnProperty(prefix = "reliable-mq.consumer.rely", name = "enabled", havingValue = "true")
         public MessageRecoverer rabbitMessageRecover(ConsumeFailRecordManager consumeFailRecordManager,
             ObjectProvider<Alarm> alarmProvider) {
            return new RabbitDatabaseMessageRecover(consumeFailRecordManager, alarmProvider);
@@ -153,12 +123,12 @@ public class ReliableMqRabbitConsumerConfiguration {
          * @param messageRecovererProvider 消息恢复提供者
          * @return 失败重试的interceptor
          */
-        @Bean(BeanNameConstants.INTERNAL_RETRY_OPERATIONS_INTERCEPTOR)
+        @Bean(BeanNameConstants.INTERNAL_RABBIT_RETRY_OPERATIONS_INTERCEPTOR)
         @ConditionalOnMissingBean(RetryOperationsInterceptor.class)
         public RetryOperationsInterceptor retryOperationsInterceptor(
             ObjectProvider<MessageRecoverer> messageRecovererProvider
         ) {
-            RabbitProperties.Retry properties = rabbitProperties.getListener().getSimple().getRetry();
+            ReliableMqConsumerRely properties = rabbitProperties.getRely();
             RetryInterceptorBuilder<RetryInterceptorBuilder.StatelessRetryInterceptorBuilder,
                 RetryOperationsInterceptor> builder = RetryInterceptorBuilder.stateless();
             PropertyMapper map = PropertyMapper.get();
@@ -183,6 +153,22 @@ public class ReliableMqRabbitConsumerConfiguration {
             builder.recoverer(recoverer);
             return builder.build();
         }
+
+    }
+
+    /**
+     * 定义rabbit的监听容器bean的后置加工
+     * 该加工厂将“幂等消费拦截器”、“顺序消费拦截器”和“消费失败告警和保存”的bean设置到监听容器中
+     *
+     * @return rabbit的监听容器bean的后置加工
+     */
+    @Bean
+    public RabbitListenerContainerBeanPostProcessor rabbitListenerContainerBeanPostProcessor(
+            ObjectProvider<RabbitSequenceOperationsInterceptor> sequenceInterceptorProvider,
+            ObjectProvider<RetryOperationsInterceptor> retryInterceptorProvider,
+            ObjectProvider<RabbitIdempotentOperationsInterceptor> idempotentInterceptorProvider
+    ) {
+        return new RabbitListenerContainerBeanPostProcessor(sequenceInterceptorProvider, retryInterceptorProvider, idempotentInterceptorProvider);
     }
 
 }

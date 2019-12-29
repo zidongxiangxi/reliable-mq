@@ -17,13 +17,13 @@ import java.util.Objects;
  * @date 2019/10/11
  */
 @Slf4j
-public class TransactionIdempotentOperationsInterceptor extends AbstractConsumerOperationsInterceptor {
+public class RabbitIdempotentOperationsInterceptor extends AbstractRabbitOperationsInterceptor {
     private ConsumeRecordManager consumeRecordManager;
     private TransactionTemplate transactionTemplate;
 
-    public TransactionIdempotentOperationsInterceptor(
-        ConsumeRecordManager consumeRecordManager,
-        TransactionTemplate transactionTemplate) {
+    public RabbitIdempotentOperationsInterceptor(
+            ConsumeRecordManager consumeRecordManager,
+            TransactionTemplate transactionTemplate) {
         this.consumeRecordManager = consumeRecordManager;
         this.transactionTemplate = transactionTemplate;
     }

@@ -2,7 +2,6 @@ package com.zidongxiangxi.reliable.starter.config.consumer;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * 幂等消费配置
@@ -12,7 +11,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  */
 @Getter
 @Setter
-@ConfigurationProperties(prefix = "reliable-mq.consumer.idempotent")
 public class ReliableMqConsumerIdempotent {
     /**
      * 是否开启幂等消费

@@ -2,7 +2,8 @@ package com.zidongxiangxi.reliable.starter.config.consumer;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.boot.context.properties.ConfigurationProperties;
+
+import java.time.Duration;
 
 /**
  * 可靠消费配置
@@ -12,7 +13,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  */
 @Getter
 @Setter
-@ConfigurationProperties(prefix = "reliable-mq.consumer.rely")
 public class ReliableMqConsumerRely {
     /**
      * 是否开启可靠消费
@@ -20,7 +20,22 @@ public class ReliableMqConsumerRely {
     private boolean enabled = false;
 
     /**
-     * 可靠消费的表名
+     * 最大重试次数
      */
-    private String consumeFailRecordTableName = "consume_fail_record";
+    private int maxAttempts = 1;
+
+    /**
+     * 初始的失败间隔
+     */
+    private Duration initialInterval = Duration.ofMillis(1000);
+
+    /**
+     * 间隔时间的增长因子
+     */
+    private double multiplier = 1.0;
+
+    /**
+     * 最大的时间间隔
+     */
+    private Duration maxInterval = Duration.ofMillis(10000);
 }

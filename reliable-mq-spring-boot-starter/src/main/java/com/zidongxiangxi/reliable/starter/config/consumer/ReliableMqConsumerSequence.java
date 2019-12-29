@@ -2,7 +2,6 @@ package com.zidongxiangxi.reliable.starter.config.consumer;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * 顺序消费配置
@@ -12,7 +11,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  */
 @Getter
 @Setter
-@ConfigurationProperties(prefix = "reliable-mq.consumer.sequence")
 public class ReliableMqConsumerSequence {
     /**
      * 是否开启顺序消费

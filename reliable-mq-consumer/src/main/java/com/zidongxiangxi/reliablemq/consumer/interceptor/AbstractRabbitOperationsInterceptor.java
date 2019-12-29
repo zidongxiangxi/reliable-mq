@@ -11,7 +11,7 @@ import org.springframework.amqp.core.Message;
  * @author chenxudong
  * @date 2019/09/18
  */
-public abstract class AbstractConsumerOperationsInterceptor implements MethodInterceptor {
+public abstract class AbstractRabbitOperationsInterceptor implements MethodInterceptor {
     protected Message getMessage(MethodInvocation methodInvocation) {
         Object[] args = methodInvocation.getArguments();
         for (Object arg : args) {

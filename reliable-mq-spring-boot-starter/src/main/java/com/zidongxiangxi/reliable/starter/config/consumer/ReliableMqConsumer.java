@@ -20,32 +20,22 @@ public class ReliableMqConsumer {
     private boolean enabled = false;
 
     /**
-     * 是否可以清理消息消费记录
-     */
-    private boolean enabledClearRecord = false;
-
-    /**
      * 消费记录表名
      */
-    private String consumeRecordTableName = "consume_record";
+    private String recordTableName = "consume_record";
 
     /**
-     * 幂等消费配置
+     * 消费失败记录表名
      */
-    private final ReliableMqConsumerIdempotent idempotent = new ReliableMqConsumerIdempotent();
-
-    /**
-     * 顺序消费配置
-     */
-    private final ReliableMqConsumerSequence sequence = new ReliableMqConsumerSequence();
-
-    /**
-     * 可靠消费配置
-     */
-    private final ReliableMqConsumerRely rely = new ReliableMqConsumerRely();
+    private String failRecordTableName = "consume_fail_record";
 
     /**
      * 消费者清理消费记录的配置
      */
     private final ReliableMqConsumerClear clear = new ReliableMqConsumerClear();
+
+    /**
+     * rabbit的消费配置
+     */
+    private final ReliableMqConsumerRabbit rabbit = new ReliableMqConsumerRabbit();
 }

@@ -21,13 +21,13 @@ import java.util.Objects;
  * @date 2019/09/18
  */
 @Slf4j
-public class SequenceOperationsInterceptor extends AbstractConsumerOperationsInterceptor {
+public class RabbitSequenceOperationsInterceptor extends AbstractRabbitOperationsInterceptor {
     private ConsumeRecordManager consumeRecordManager;
     private int consumeFailDelay;
     private int faultTolerantTime;
 
-    public SequenceOperationsInterceptor(ConsumeRecordManager consumeRecordManager, int consumeFailDelay,
-        int faultTolerantTime) {
+    public RabbitSequenceOperationsInterceptor(ConsumeRecordManager consumeRecordManager, int consumeFailDelay,
+                                               int faultTolerantTime) {
         this.consumeRecordManager = consumeRecordManager;
         this.consumeFailDelay = consumeFailDelay;
         if (faultTolerantTime < 0) {

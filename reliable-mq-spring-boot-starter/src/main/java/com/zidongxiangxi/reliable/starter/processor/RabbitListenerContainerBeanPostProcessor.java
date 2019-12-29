@@ -1,7 +1,7 @@
 package com.zidongxiangxi.reliable.starter.processor;
 
-import com.zidongxiangxi.reliablemq.consumer.interceptor.SequenceOperationsInterceptor;
-import com.zidongxiangxi.reliablemq.consumer.interceptor.TransactionIdempotentOperationsInterceptor;
+import com.zidongxiangxi.reliablemq.consumer.interceptor.RabbitSequenceOperationsInterceptor;
+import com.zidongxiangxi.reliablemq.consumer.interceptor.RabbitIdempotentOperationsInterceptor;
 import org.aopalliance.aop.Advice;
 import org.springframework.amqp.rabbit.listener.AbstractMessageListenerContainer;
 import org.springframework.beans.BeansException;
@@ -28,14 +28,14 @@ import java.util.Objects;
  */
 public class RabbitListenerContainerBeanPostProcessor implements BeanPostProcessor, Ordered, BeanFactoryAware {
     private BeanFactory beanFactory;
-    private SequenceOperationsInterceptor sequenceInterceptor = null;
+    private RabbitSequenceOperationsInterceptor sequenceInterceptor = null;
     private RetryOperationsInterceptor retryInterceptor = null;
-    private TransactionIdempotentOperationsInterceptor idempotentInterceptor = null;
+    private RabbitIdempotentOperationsInterceptor idempotentInterceptor = null;
 
     public RabbitListenerContainerBeanPostProcessor(
-        ObjectProvider<SequenceOperationsInterceptor> sequenceInterceptorProvider,
+        ObjectProvider<RabbitSequenceOperationsInterceptor> sequenceInterceptorProvider,
         ObjectProvider<RetryOperationsInterceptor> retryInterceptorProvider,
-        ObjectProvider<TransactionIdempotentOperationsInterceptor> idempotentInterceptorProvider
+        ObjectProvider<RabbitIdempotentOperationsInterceptor> idempotentInterceptorProvider
     ) {
         try {
             sequenceInterceptor = sequenceInterceptorProvider.getIfUnique();
@@ -80,9 +80,9 @@ public class RabbitListenerContainerBeanPostProcessor implements BeanPostProcess
         boolean needSetRetry = Objects.nonNull(retryInterceptor);
         if (Objects.nonNull(advices)) {
             for (Advice advice : advices) {
-                if (needSetIdempotent && advice instanceof TransactionIdempotentOperationsInterceptor) {
+                if (needSetIdempotent && advice instanceof RabbitIdempotentOperationsInterceptor) {
                     needSetIdempotent = false;
-                } else if (needSetSequence && advice instanceof SequenceOperationsInterceptor) {
+                } else if (needSetSequence && advice instanceof RabbitSequenceOperationsInterceptor) {
                     needSetSequence = false;
                 } else if (needSetRetry && advice instanceof RetryOperationsInterceptor) {
                     needSetRetry = false;
