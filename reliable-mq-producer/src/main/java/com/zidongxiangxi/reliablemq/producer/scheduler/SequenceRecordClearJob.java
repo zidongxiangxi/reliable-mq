@@ -1,6 +1,6 @@
 package com.zidongxiangxi.reliablemq.producer.scheduler;
 
-import com.zidongxiangxi.reliabelmq.api.entity.SequenceMessage;
+import com.zidongxiangxi.reliabelmq.api.entity.ProduceSequenceRecord;
 import com.zidongxiangxi.reliabelmq.api.manager.ProduceSequenceRecordManager;
 import com.xxl.job.core.biz.model.ReturnT;
 import com.xxl.job.core.handler.IJobHandler;
@@ -52,11 +52,11 @@ public class SequenceRecordClearJob extends IJobHandler {
     }
 
     private int clearRecord(Date beforeTime, int batchSize) {
-        List<SequenceMessage> sequenceMessages = manager.listRecord(beforeTime, batchSize);
+        List<ProduceSequenceRecord> sequenceMessages = manager.listRecord(beforeTime, batchSize);
         if (CollectionUtils.isEmpty(sequenceMessages)) {
             return 0;
         }
-        List<Long> ids = sequenceMessages.stream().map(SequenceMessage::getId).collect(Collectors.toList());
+        List<Long> ids = sequenceMessages.stream().map(ProduceSequenceRecord::getId).collect(Collectors.toList());
         manager.deleteRecordByIds(ids);
         return ids.size();
     }

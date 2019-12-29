@@ -1,9 +1,9 @@
 package com.zidongxiangxi.reliablemq.producer.manager;
 
-import com.zidongxiangxi.reliabelmq.api.entity.SequenceMessage;
+import com.zidongxiangxi.reliabelmq.api.entity.ProduceSequenceRecord;
 import com.zidongxiangxi.reliabelmq.api.manager.ProduceSequenceRecordManager;
 import com.zidongxiangxi.reliabelmq.api.transaction.ProduceSequenceRecordSqlProvider;
-import com.zidongxiangxi.reliablemq.producer.mapper.SequenceMessageMapper;
+import com.zidongxiangxi.reliablemq.producer.mapper.ProduceSequenceRecordMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,13 +34,13 @@ public class DefaultProduceSequenceRecordManager implements ProduceSequenceRecor
     @Override
     @Transactional(readOnly = true, rollbackFor = Exception.class)
     public String getPreviousMessageId(String application, String messageId) {
-        List<SequenceMessage> sequenceMessageList =
+        List<ProduceSequenceRecord> sequenceMessageList =
             jdbcTemplate.query(sequenceSqlProvider.getSelectByMessageIdSql(),
-                new SequenceMessageMapper(), application, messageId);
+                new ProduceSequenceRecordMapper(), application, messageId);
         if (CollectionUtils.isEmpty(sequenceMessageList)) {
             return null;
         }
-        SequenceMessage sequenceMessage = sequenceMessageList.get(0);
+        ProduceSequenceRecord sequenceMessage = sequenceMessageList.get(0);
         List<Long> previousIdList = jdbcTemplate.queryForList(sequenceSqlProvider.getSelectPreviousIdSql(), Long.class,
             sequenceMessage.getApplication(), sequenceMessage.getGroupName(), sequenceMessage.getId());
         if (CollectionUtils.isEmpty(previousIdList)) {
@@ -48,13 +48,13 @@ public class DefaultProduceSequenceRecordManager implements ProduceSequenceRecor
         }
         Long previousId = previousIdList.get(0);
         sequenceMessageList = jdbcTemplate.query(sequenceSqlProvider.getSelectByIdSql(),
-            new SequenceMessageMapper(), previousId);
+            new ProduceSequenceRecordMapper(), previousId);
         return CollectionUtils.isEmpty(sequenceMessageList) ? null : sequenceMessageList.get(0).getMessageId();
     }
 
     @Override
-    public List<SequenceMessage> listRecord(Date beforeTime, int size) {
-        return jdbcTemplate.query(sequenceSqlProvider.getListSql(), new SequenceMessageMapper(), beforeTime, size);
+    public List<ProduceSequenceRecord> listRecord(Date beforeTime, int size) {
+        return jdbcTemplate.query(sequenceSqlProvider.getListSql(), new ProduceSequenceRecordMapper(), beforeTime, size);
     }
 
     @Override

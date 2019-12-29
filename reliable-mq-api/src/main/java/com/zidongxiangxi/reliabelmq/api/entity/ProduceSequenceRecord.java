@@ -12,7 +12,7 @@ import java.util.Date;
  * @date 2019/12/23
  */
 @Data
-public class SequenceMessage implements Serializable {
+public class ProduceSequenceRecord implements Serializable {
     /**
      * 消息id
      */

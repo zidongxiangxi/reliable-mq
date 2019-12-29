@@ -1,6 +1,6 @@
 package com.zidongxiangxi.reliabelmq.api.manager;
 
-import com.zidongxiangxi.reliabelmq.api.entity.SequenceMessage;
+import com.zidongxiangxi.reliabelmq.api.entity.ProduceSequenceRecord;
 
 import java.util.Date;
 import java.util.List;
@@ -28,7 +28,7 @@ public interface ProduceSequenceRecordManager {
      * @param size 数量
      * @return 顺序消息记录列表
      */
-    List<SequenceMessage> listRecord(Date beforeTime, int size);
+    List<ProduceSequenceRecord> listRecord(Date beforeTime, int size);
 
     /**
      * 根据主键删除顺序消息记录
