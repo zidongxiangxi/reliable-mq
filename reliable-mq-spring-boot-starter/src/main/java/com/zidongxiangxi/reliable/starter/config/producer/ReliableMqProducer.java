@@ -20,19 +20,9 @@ public class ReliableMqProducer {
     private boolean enabled = false;
 
     /**
-     * rabbitMq发送表
+     * rabbit发送配置
      */
-    private String producerTableName = "rabbit_produce_record";
-
-    /**
-     * 顺序消息表
-     */
-    private String sequenceTableName = "produce_sequence_record";
-
-    /**
-     * 重试配置
-     */
-    private final ReliableMqProducerRely rely = new ReliableMqProducerRely();
+    private final ReliableMqProducerRabbit rabbit = new ReliableMqProducerRabbit();
 
     /**
      * 顺序配置

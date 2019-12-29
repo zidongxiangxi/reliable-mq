@@ -40,20 +40,21 @@ import org.springframework.transaction.support.TransactionSynchronization;
  */
 @Configuration
 @ConditionalOnClass(RabbitTemplate.class)
-@ConditionalOnProperty(prefix = "reliable-mq.producer", name = "enabled", havingValue = "true")
+@ConditionalOnProperty(prefix = "reliable-mq.producer.rabbit", name = "enabled", havingValue = "true")
 public class ReliableMqRabbitProducerConfiguration {
     /**
      * 定义mq消息的manager
      *
      * @param jdbcTemplate jdbcTemplate实例
+     * @param producer 发送配置
      * @return mq消息的数据库manager
      */
     @Bean
     public ProduceRecordManager<RabbitProducer> rabbitProduceRecordManager(JdbcTemplate jdbcTemplate, ReliableMqProducer producer) {
         ProduceRecordSqlProvider recordSqlProvider =
-            new RabbitProduceRecordSqlProvider(producer.getProducerTableName());
+            new RabbitProduceRecordSqlProvider(producer.getRabbit().getRecordTableName());
         ProduceSequenceRecordSqlProvider sequenceRecordSqlProvider =
-            new DefaultProduceSequenceRecordSqlProvider(producer.getSequenceTableName());
+            new DefaultProduceSequenceRecordSqlProvider(producer.getSequence().getRecordTaleName());
         return new RabbitProduceRecordManagerImpl(jdbcTemplate, recordSqlProvider, sequenceRecordSqlProvider);
     }
 
@@ -133,11 +134,11 @@ public class ReliableMqRabbitProducerConfiguration {
          */
         @Bean
         @ConditionalOnMissingBean(RabbitRetrySendJob.class)
-        @ConditionalOnProperty(prefix = "reliable-mq.producer.rely", name = "enabled", havingValue = "true", matchIfMissing = true)
+        @ConditionalOnProperty(prefix = "reliable-mq.producer.rabbit", name = "enabled-retry", havingValue = "true", matchIfMissing = true)
         public RabbitRetrySendJob rabbitRetrySendJob(ProduceRecordManager<RabbitProducer> producerManager,
             RabbitProducerService rabbitService, ReliableMqProperties properties) {
             return new RabbitRetrySendJob(producerManager, rabbitService, properties.getApplication(),
-                properties.getProducer().getRely().getBatchSize());
+                properties.getProducer().getRabbit().getRetryBatchSize());
         }
     }
 }

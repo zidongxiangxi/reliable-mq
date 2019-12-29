@@ -15,17 +15,23 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "reliable-mq.producer.sequence")
 public class ReliableMqProducerSequence {
     /**
+     * 顺序消息记录表
+     */
+    private String recordTaleName = "produce_sequence_record";
+
+    /**
      * 是否可以清理顺序消息记录
      */
     private boolean enabledClear = false;
+
+    /**
+     * 每次执行定时任务，清理的数量
+     */
+    private int clearBatchSize = 20;
 
     /**
      * 保留时长，单位：天
      */
     private int retentionPeriod = 10;
 
-    /**
-     * 每次执行定时任务，清理的数量
-     */
-    private int batchSize = 20;
 }

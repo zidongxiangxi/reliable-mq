@@ -5,7 +5,6 @@ import com.zidongxiangxi.reliablemq.producer.manager.DefaultProduceSequenceRecor
 import com.zidongxiangxi.reliablemq.producer.scheduler.SequenceRecordClearJob;
 import com.zidongxiangxi.reliablemq.producer.transaction.sql.DefaultProduceSequenceRecordSqlProvider;
 import com.zidongxiangxi.reliable.starter.config.producer.ReliableMqProducer;
-import com.zidongxiangxi.reliable.starter.config.producer.ReliableMqProducerRely;
 import com.zidongxiangxi.reliable.starter.config.producer.ReliableMqProducerSequence;
 import com.zidongxiangxi.reliable.starter.producer.rabbit.ReliableMqRabbitProducerConfiguration;
 import com.xxl.job.core.handler.IJobHandler;
@@ -28,21 +27,21 @@ import org.springframework.scheduling.annotation.EnableAsync;
  */
 @EnableAsync
 @Configuration
-@EnableConfigurationProperties({ReliableMqProducer.class, ReliableMqProducerRely.class, ReliableMqProducerSequence.class})
+@EnableConfigurationProperties({ReliableMqProducer.class, ReliableMqProducerSequence.class})
 @Import({ReliableMqRabbitProducerConfiguration.class})
 public class ReliableMqProducerAutoConfiguration {
     /**
      * 定义顺序消息记录的manager
      *
      * @param jdbcTemplate jdbcTemplate实例
-     * @param producer 生产者配置
+     * @param sequence 顺序消息相关配置
      * @return 顺序消息记录的manager
      */
     @Bean
     @ConditionalOnBean(JdbcTemplate.class)
-    public ProduceSequenceRecordManager produceSequenceRecordManager(JdbcTemplate jdbcTemplate, ReliableMqProducer producer) {
+    public ProduceSequenceRecordManager produceSequenceRecordManager(JdbcTemplate jdbcTemplate, ReliableMqProducerSequence sequence) {
         return new DefaultProduceSequenceRecordManager(jdbcTemplate,
-            new DefaultProduceSequenceRecordSqlProvider(producer.getSequenceTableName()));
+            new DefaultProduceSequenceRecordSqlProvider(sequence.getRecordTaleName()));
     }
 
     /**
@@ -54,15 +53,15 @@ public class ReliableMqProducerAutoConfiguration {
          * 定义xxl-job的清理顺序消息记录任务
          *
          * @param sequenceManager 顺序消息记录manager
-         * @param producer 发送配置
+         * @param sequence 顺序消息相关配置
          * @return 重试发送任务
          */
         @Bean
         @ConditionalOnMissingBean(SequenceRecordClearJob.class)
         @ConditionalOnProperty(prefix = "reliable-mq.producer.sequence", name = "enabled-clear", havingValue = "true")
-        public SequenceRecordClearJob sequenceRecordClearJob(ProduceSequenceRecordManager sequenceManager, ReliableMqProducer producer) {
-            return new SequenceRecordClearJob(sequenceManager, producer.getSequence().getRetentionPeriod(),
-                producer.getSequence().getBatchSize());
+        public SequenceRecordClearJob sequenceRecordClearJob(ProduceSequenceRecordManager sequenceManager, ReliableMqProducerSequence sequence) {
+            return new SequenceRecordClearJob(sequenceManager, sequence.getRetentionPeriod(),
+                    sequence.getClearBatchSize());
         }
     }
 }
