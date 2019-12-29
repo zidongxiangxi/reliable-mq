@@ -27,6 +27,7 @@
         <module>reliable-mq-producer</module>
         <module>reliable-mq-consumer</module>
         <module>reliable-mq-spring-boot-starter</module>
+        <module>reliable-mq-demo</module>
     </modules>
 
     <dependencyManagement>

@@ -1,0 +1,71 @@
+spring:
+  profiles:
+
+  rabbitmq:
+    virtual-host:
+    host:
+    username:
+    password:
+    publisher-confirms: true
+    template:
+      mandatory: true
+    listener:
+      type: simple
+      simple:
+        retry:
+          enabled: true
+          initialInterval: 1000
+          multiplier: 2
+          maxInterval: 10000
+
+  datasource:
+    url:
+    driver-class-name: com.mysql.jdbc.Driver
+    type: com.alibaba.druid.pool.DruidDataSource
+    username:
+    password:
+    max-wait: 10000
+    max-active: 20
+
+  task:
+    execution:
+      pool:
+        allow-core-thread-timeout: false
+
+#可靠mq
+reliable-mq:
+  application: reliable-mq-demo
+  producer:
+    enabled: true
+    sequence:
+      record-table-name: produce_sequence_record
+      enabled-clear: true
+      retention-period: 7
+      batch-size: 30
+    rabbit:
+      enabled: true
+      record-table-name: rabbit_produce_record
+      enabled-retry: true
+      retry-batch-size: 30
+  consumer:
+    enabled: true
+    record-table-name: consume_record
+    fail-record-table-name: consume_fail_record
+    clear:
+      enabled: true
+      retention-period: 7
+      batch-size: 30
+    rabbit:
+      enabled: true
+      idempotent:
+        enabled: true
+      sequence:
+        enabled: true
+        consume-fail-delay: 3000
+        fault-tolerant-time: 180000
+      rely:
+        enabled: true
+        max-attempts: 1
+        initial-interval: 2000
+        multiplier: 2
+        max-interval: 20000
