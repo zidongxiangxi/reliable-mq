@@ -17,7 +17,7 @@ public class ReliableMqProducerSequence {
     /**
      * 顺序消息记录表
      */
-    private String recordTaleName = "produce_sequence_record";
+    private String recordTableName = "produce_sequence_record";
 
     /**
      * 是否可以清理顺序消息记录

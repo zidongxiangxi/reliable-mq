@@ -76,22 +76,6 @@ public class ReliableMqRabbitConsumerConfiguration {
     }
 
     /**
-     * 定义rabbit的simple监听容器工厂bean的后置加工
-     * 该加工厂将“幂等消费拦截器”、“顺序消费拦截器”和“消费失败告警和保存”的bean设置到工厂中
-     *
-     * @return rabbit的simple监听容器工厂bean的后置加工
-     */
-    @Bean
-    public SimpleRabbitListenerContainerFactoryBeanPostProcessor simpleRabbitListenerContainerFactoryBeanPostProcessor(
-        ObjectProvider<RabbitSequenceOperationsInterceptor> sequenceInterceptorProvider,
-        ObjectProvider<RetryOperationsInterceptor> retryInterceptorProvider,
-        ObjectProvider<RabbitIdempotentOperationsInterceptor> idempotentInterceptorProvider
-    ) {
-        return new SimpleRabbitListenerContainerFactoryBeanPostProcessor(sequenceInterceptorProvider,
-            retryInterceptorProvider, idempotentInterceptorProvider);
-    }
-
-    /**
      * rabbit可靠消费（消费失败告警和保存）的配置
      * 只有在mq消息消费失败后，不放回队列，才生效
      */
@@ -154,6 +138,22 @@ public class ReliableMqRabbitConsumerConfiguration {
             return builder.build();
         }
 
+    }
+
+    /**
+     * 定义rabbit的simple监听容器工厂bean的后置加工
+     * 该加工厂将“幂等消费拦截器”、“顺序消费拦截器”和“消费失败告警和保存”的bean设置到工厂中
+     *
+     * @return rabbit的simple监听容器工厂bean的后置加工
+     */
+    @Bean
+    public SimpleRabbitListenerContainerFactoryBeanPostProcessor simpleRabbitListenerContainerFactoryBeanPostProcessor(
+            ObjectProvider<RabbitSequenceOperationsInterceptor> sequenceInterceptorProvider,
+            ObjectProvider<RetryOperationsInterceptor> retryInterceptorProvider,
+            ObjectProvider<RabbitIdempotentOperationsInterceptor> idempotentInterceptorProvider
+    ) {
+        return new SimpleRabbitListenerContainerFactoryBeanPostProcessor(sequenceInterceptorProvider,
+                retryInterceptorProvider, idempotentInterceptorProvider);
     }
 
     /**

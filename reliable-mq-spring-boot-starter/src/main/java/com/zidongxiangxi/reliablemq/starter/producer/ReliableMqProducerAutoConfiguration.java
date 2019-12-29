@@ -41,7 +41,7 @@ public class ReliableMqProducerAutoConfiguration {
     @ConditionalOnBean(JdbcTemplate.class)
     public ProduceSequenceRecordManager produceSequenceRecordManager(JdbcTemplate jdbcTemplate, ReliableMqProducerSequence sequence) {
         return new DefaultProduceSequenceRecordManager(jdbcTemplate,
-            new DefaultProduceSequenceRecordSqlProvider(sequence.getRecordTaleName()));
+            new DefaultProduceSequenceRecordSqlProvider(sequence.getRecordTableName()));
     }
 
     /**

@@ -54,7 +54,7 @@ public class ReliableMqRabbitProducerConfiguration {
         ProduceRecordSqlProvider recordSqlProvider =
             new RabbitProduceRecordSqlProvider(producer.getRabbit().getRecordTableName());
         ProduceSequenceRecordSqlProvider sequenceRecordSqlProvider =
-            new DefaultProduceSequenceRecordSqlProvider(producer.getSequence().getRecordTaleName());
+            new DefaultProduceSequenceRecordSqlProvider(producer.getSequence().getRecordTableName());
         return new RabbitProduceRecordManagerImpl(jdbcTemplate, recordSqlProvider, sequenceRecordSqlProvider);
     }
 
