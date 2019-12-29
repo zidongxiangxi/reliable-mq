@@ -34,7 +34,9 @@ public class ClientRabbitServiceImpl implements RabbitService {
         this.sequenceManager = sequenceManager;
         this.rabbitTemplate = rabbitTemplate;
         if (Objects.nonNull(alarmProvider)) {
-            this.alarm = alarmProvider.getIfAvailable();
+            try {
+                this.alarm = alarmProvider.getIfUnique();
+            } catch (Throwable ignore) {}
         }
     }
 

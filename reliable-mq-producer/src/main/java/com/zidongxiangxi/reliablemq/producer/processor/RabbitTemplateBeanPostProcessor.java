@@ -28,7 +28,9 @@ public class RabbitTemplateBeanPostProcessor implements BeanPostProcessor, Order
         ObjectProvider<Alarm> alarmProvider) {
         this.producerManager = producerManager;
         if (Objects.nonNull(alarmProvider)) {
-            this.alarm = alarmProvider.getIfAvailable();
+            try {
+                this.alarm = alarmProvider.getIfUnique();
+            } catch (Throwable ignore) {}
         }
     }
 

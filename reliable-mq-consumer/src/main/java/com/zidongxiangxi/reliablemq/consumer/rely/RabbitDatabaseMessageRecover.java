@@ -27,7 +27,9 @@ public class RabbitDatabaseMessageRecover implements MessageRecoverer {
         ObjectProvider<Alarm> alarmProvider) {
         this.consumeFailRecordManager = consumeFailRecordManager;
         if (Objects.nonNull(alarmProvider)) {
-            this.alarm = alarmProvider.getIfAvailable();
+            try {
+                this.alarm = alarmProvider.getIfUnique();
+            } catch (Throwable ignore) {}
         }
     }
 
