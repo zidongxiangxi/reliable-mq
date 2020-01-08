@@ -59,7 +59,7 @@ public class RabbitListenerContainerBeanPostProcessor implements BeanPostProcess
     }
 
     @Override
-    public Object postProcessAfterInitialization(final Object bean, final String beanName) throws BeansException {
+    public Object postProcessBeforeInitialization(final Object bean, final String beanName) throws BeansException {
         if (Objects.isNull(idempotentInterceptor) && Objects.isNull(sequenceInterceptor) && Objects.isNull(retryInterceptor)) {
             return bean;
         }
